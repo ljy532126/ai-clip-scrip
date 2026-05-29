@@ -64,23 +64,26 @@ const start = async () => {
     console.log('Server running on http://localhost:' + config.port)
   })
 
-  if (config.mimo.apiKey) {
+  // 检测当前激活的 LLM 连通性
+  const LLMConfig = require('./model/LLMConfig')
+  const activeLLM = await LLMConfig.findOne({ isActive: true })
+  if (activeLLM) {
     const axios = require('axios')
     try {
-      await axios.post(config.mimo.apiUrl + '/chat/completions', {
-        model: config.mimo.model,
+      await axios.post(activeLLM.apiUrl, {
+        model: activeLLM.model,
         messages: [{ role: 'user', content: 'ping' }],
         max_tokens: 1
       }, {
-        headers: { Authorization: 'Bearer ' + config.mimo.apiKey, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${activeLLM.apiKey}`, 'Content-Type': 'application/json' },
         timeout: 10000
       })
-      console.log('MiMo API OK')
+      console.log(`LLM连接正常: ${activeLLM.name} (${activeLLM.model})`)
     } catch (err) {
-      console.log('MiMo API offline (' + err.message + '), using mock')
+      console.log(`LLM未连通 (${activeLLM.name}): ${err.message}, 将降级为模拟数据`)
     }
   } else {
-    console.log('No MIMO_API_KEY, using mock')
+    console.log('未配置LLM，使用模拟数据')
   }
 }
 
