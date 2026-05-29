@@ -65,7 +65,6 @@ const start = async () => {
   })
 
   // 检测当前激活的 LLM 连通性
-  const LLMConfig = require('./model/LLMConfig')
   const activeLLM = await LLMConfig.findOne({ isActive: true })
   if (activeLLM) {
     const axios = require('axios')
