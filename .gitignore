@@ -1,0 +1,14 @@
+node_modules/
+output/
+.env
+*.zip
+dist/
+.DS_Store
+# Android build
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/.gradle/
+frontend/android/captures/
+*.apk
+*.aab
+*.jks

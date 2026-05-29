@@ -1,0 +1,63 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: |
+          echo "VITE_API_BASE=http://10.168.1.101:3013/api" > .env.production
+          npm run build
+
+      - name: Sync Capacitor
+        working-directory: frontend
+        run: npx cap sync android
+
+      - name: Generate Android Icons
+        working-directory: frontend/android
+        run: |
+          mkdir -p app/src/main/res/mipmap-xxxhdpi
+          # Use Capacitor's splash to generate
+          echo "Icons will use default Capacitor assets"
+
+      - name: Build APK
+        working-directory: frontend/android
+        run: |
+          ./gradlew assembleDebug -x lint
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-clipscript-apk
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk

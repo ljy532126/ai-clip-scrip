@@ -1,0 +1,9 @@
+{
+  "appId": "com.clipscript.app",
+  "appName": "AI剪辑脚本",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "allowNavigation": ["*"]
+  }
+}

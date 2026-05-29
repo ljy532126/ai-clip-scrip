@@ -1,0 +1,78 @@
+/* ═══════════════════════════════════════════════
+   WARM STUDIO — 暖调编辑室主题
+   奶油底色 + 深炭文字 + 琥珀金点缀
+   ═══════════════════════════════════════════════ */
+
+:root {
+  /* 暖色系 */
+  --accent: #d4914a;
+  --accent-light: #f0c78e;
+  --accent-soft: rgba(212, 145, 74, 0.12);
+
+  --rose: #c97b6b;
+  --sage: #7a9e7e;
+  --sky: #6b8da8;
+  --purple: #8b7aaa;
+
+  /* 底色 */
+  --bg-page: #faf7f2;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f5f0e8;
+  --bg-input: #f8f5ef;
+
+  /* 文字 */
+  --text-primary: #2c2416;
+  --text-secondary: #6b6255;
+  --text-muted: #9e9689;
+
+  /* 边框 */
+  --border-color: #e8e2d5;
+  --border-light: #f0ebe0;
+
+  /* 功能色 */
+  --primary-color: #d4914a;
+  --success-color: #7a9e7e;
+  --warning-color: #d4914a;
+  --danger-color: #c97b6b;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(44, 36, 22, 0.06);
+  --shadow-md: 0 4px 16px rgba(44, 36, 22, 0.08);
+  --shadow-lg: 0 8px 32px rgba(44, 36, 22, 0.1);
+
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* 兼容别名 */
+  --card-bg: var(--bg-card);
+  --bg-color: var(--bg-page);
+  --bg-white: var(--bg-surface);
+}
+
+/* ====== 暗色主题 ====== */
+[data-theme='dark'] {
+  --accent: #e0a85a;
+  --accent-light: #c4903e;
+  --accent-soft: rgba(224, 168, 90, 0.12);
+
+  --bg-page: #1c1a16;
+  --bg-surface: #25221c;
+  --bg-card: #25221c;
+  --bg-hover: #2e2a23;
+  --bg-input: #2a2720;
+
+  --text-primary: #e8e0d5;
+  --text-secondary: #9e9689;
+  --text-muted: #6b6255;
+
+  --border-color: #38342c;
+  --border-light: #302c24;
+
+  --card-bg: var(--bg-card);
+  --bg-color: var(--bg-page);
+  --bg-white: var(--bg-surface);
+}

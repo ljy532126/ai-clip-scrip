@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#d4914a"/>
+  <rect width="512" height="512" rx="100" fill="url(#g)"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0%" stop-color="#d4914a"/>
+      <stop offset="100%" stop-color="#c97b6b"/>
+    </linearGradient>
+  </defs>
+  <text x="256" y="220" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="120" fill="#fff" letter-spacing="8">AI</text>
+  <text x="256" y="340" text-anchor="middle" font-family="sans-serif" font-weight="500" font-size="48" fill="rgba(255,255,255,0.85)" letter-spacing="4">剪辑脚本</text>
+</svg>
