@@ -28,6 +28,14 @@
     <div class="download-bar" v-if="generateStore.results">
       <DownloadBtn :files="generateStore.results" />
     </div>
+
+    <van-tabbar v-model="active" route fixed :border="true">
+      <van-tabbar-item to="/"><template #icon><IconHome size="22"/></template>首页</van-tabbar-item>
+      <van-tabbar-item to="/generate"><template #icon><IconMagic size="22"/></template>生成</van-tabbar-item>
+      <van-tabbar-item to="/toolbox"><template #icon><IconTool size="22"/></template>工具箱</van-tabbar-item>
+      <van-tabbar-item to="/record"><template #icon><IconHistory size="22"/></template>记录</van-tabbar-item>
+      <van-tabbar-item to="/user"><template #icon><IconPeople size="22"/></template>我的</van-tabbar-item>
+    </van-tabbar>
   </div>
 </template>
 
@@ -36,7 +44,11 @@ import { ref } from 'vue'
 import { useGenerateStore } from '../store'
 import { generateAPI } from '../api'
 import { showToast, showFailToast } from 'vant'
+import { Home, Magic, Tool, History, People } from '@icon-park/vue-next'
+const IconHome=Home;const IconMagic=Magic;const IconTool=Tool;const IconHistory=History;const IconPeople=People
 import AgentForm from '../components/AgentForm.vue'
+
+const active = ref(1)
 import FilePreview from '../components/FilePreview.vue'
 import DownloadBtn from '../components/DownloadBtn.vue'
 const generateStore = useGenerateStore()

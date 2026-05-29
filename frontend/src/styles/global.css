@@ -14,7 +14,14 @@ body {
   background: var(--bg-page);
   color: var(--text-primary);
   min-height: 100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
+
+/* 导航栏贴合安全区 */
+.van-nav-bar { padding-top: env(safe-area-inset-top) !important; height: auto !important; }
 
 #app {
   min-height: 100vh;

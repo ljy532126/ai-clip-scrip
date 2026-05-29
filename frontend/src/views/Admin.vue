@@ -125,11 +125,10 @@
             <div class="llm-card-actions">
               <van-button size="small" plain @click="editLLMPop(llm)">编辑</van-button>
               <van-button size="small" plain type="danger" @click="delLLM(llm)">删除</van-button>
-              <van-button size="small" plain :loading="testingId===llm._id" @click="testConnect(llm)">测试连通</van-button>
+              <van-button size="small" plain :loading="llm._testing" @click="testConnect(llm)">测试连通</van-button>
             </div>
-            <!-- 测试结果 -->
-            <div class="llm-test-result" v-if="testResult && testingId === llm._id" :class="testResult.success ? 'success' : 'fail'">
-              {{ testResult.success ? `连通正常 ${testResult.elapsed} — ${testResult.content}` : testResult.error }}
+            <div class="llm-test-result" v-if="llm._testResult" :class="llm._testResult.success ? 'success' : 'fail'">
+              {{ llm._testResult.success ? `连通正常 ${llm._testResult.elapsed} — ${llm._testResult.content}` : llm._testResult.error }}
             </div>
           </div>
 
@@ -295,9 +294,16 @@ const editLLMPop = (llm) => { llmForm.name = llm.name; llmForm.apiUrl = llm.apiU
 const delLLM = async (llm) => { if (!llm._id) return; try { await adminAPI.deleteLLMConfig(llm._id); showSuccessToast('已删除'); const l = await adminAPI.getLLMConfigs(); llmList.value = l.list || [] } catch (err) { showFailToast(err.message) } }
 const activateLLM = async (llm) => { try { await adminAPI.activateLLMConfig(llm._id); showSuccessToast('已切换'); const l = await adminAPI.getLLMConfigs(); llmList.value = l.list || [] } catch (err) { showFailToast(err.message) } }
 const testConnect = async (llm) => {
-  testingId.value = llm._id; testResult.value = null
-  try { testResult.value = await adminAPI.testLLM({ apiUrl: llm.apiUrl, apiKey: llm.apiKey, model: llm.model }) } catch { testResult.value = { success: false, error: '测试请求失败' } }
-  testingId.value = null
+  llm._testing = true; llm._testResult = null
+  try {
+    llm._testResult = await adminAPI.testLLM({ apiUrl: llm.apiUrl, apiKey: llm.apiKey, model: llm.model })
+  } catch {
+    llm._testResult = { success: false, error: '测试请求失败' }
+  }
+  llm._testing = false
+  // Force reactability for dynamic props
+  const idx = llmList.value.findIndex(l => l._id === llm._id)
+  if (idx >= 0) llmList.value.splice(idx, 1, { ...llm })
 }
 
 const formatNum = n => n >= 10000 ? (n / 10000).toFixed(1) + '万' : n.toLocaleString()
