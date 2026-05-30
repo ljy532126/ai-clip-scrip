@@ -49,7 +49,9 @@ export const userAPI = {
   getMyStats: () => http.get('/user/mystats'),
   addFavorite: (recordId) => http.post('/user/favorite', { recordId }),
   removeFavorite: (recordId) => http.post('/user/unfavorite', { recordId }),
-  getFavorites: () => http.get('/user/favorites')
+  getFavorites: () => http.get('/user/favorites'),
+  changePassword: (data) => http.post('/user/password', data),
+  updateAvatar: (data) => http.post('/user/avatar', data)
 }
 
 // 工具箱API
@@ -73,7 +75,9 @@ export const adminAPI = {
   updateLLMConfig: (id, data) => http.put(`/admin/llm/${id}`, data),
   deleteLLMConfig: (id) => http.delete(`/admin/llm/${id}`),
   activateLLMConfig: (id) => http.post(`/admin/llm/${id}/activate`),
-  testLLM: (data) => http.post('/admin/llm/test', data)
+  testLLM: (data) => http.post('/admin/llm/test', data),
+  getUsers: () => http.get('/admin/users'),
+  toggleBan: (userId) => http.post('/admin/user/ban', { userId })
 }
 
 // 公告API（公开）

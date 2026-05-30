@@ -24,6 +24,10 @@ router.post('/user/favorite', userController.addFavorite)
 router.post('/user/unfavorite', userController.removeFavorite)
 router.get('/user/favorites', userController.getFavorites)
 router.get('/user/mystats', userController.getMyStats)
+router.post('/user/password', userController.changePassword)
+router.post('/user/avatar', userController.updateAvatar)
+router.get('/admin/users', userController.adminListUsers)
+router.post('/admin/user/ban', userController.adminToggleBan)
 
 // 工具箱
 router.post('/toolbox/subtitle', toolboxController.subtitle)

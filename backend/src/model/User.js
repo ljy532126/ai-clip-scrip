@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   nickname: { type: String, default: '' },
   avatar: { type: String, default: '' },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  banned: { type: Boolean, default: false },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Record' }],
   createdAt: { type: Date, default: Date.now }
 })

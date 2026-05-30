@@ -9,6 +9,7 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ username })
     if (!user) return res.status(400).json({ message: '用户名不存在，请先注册' })
+    if (user.banned) return res.status(403).json({ message: '账号已被封禁' })
     if (user.password !== password) return res.status(400).json({ message: '密码错误' })
 
     const token = Buffer.from(`${user._id}:${user.userId}:${user.role}:${Date.now()}`).toString('base64')
@@ -121,4 +122,61 @@ exports.getMyStats = async (req, res) => {
   } catch {
     res.json({ total: 0, today: 0, totalWords: 0, totalTokens: 0 })
   }
+}
+
+// ═══ 修改密码 ═══
+exports.changePassword = async (req, res) => {
+  try {
+    const auth = req.headers.authorization; if (!auth) return res.status(401).json({ message: '请先登录' })
+    const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+    const userId = decoded.split(':')[0]
+    const { oldPassword, newPassword } = req.body
+    if (!oldPassword || !newPassword) return res.status(400).json({ message: '请填写旧密码和新密码' })
+    if (newPassword.length < 3) return res.status(400).json({ message: '新密码至少3位' })
+    const user = await User.findById(userId)
+    if (!user) return res.status(404).json({ message: '用户不存在' })
+    if (user.password !== oldPassword) return res.status(400).json({ message: '旧密码错误' })
+    user.password = newPassword
+    await user.save()
+    res.json({ message: '密码修改成功' })
+  } catch { res.status(500).json({ message: '修改失败' }) }
+}
+
+// ═══ 设置头像 ═══
+exports.updateAvatar = async (req, res) => {
+  try {
+    const auth = req.headers.authorization; if (!auth) return res.status(401).json({ message: '请先登录' })
+    const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+    const userId = decoded.split(':')[0]
+    const { avatar } = req.body
+    if (!avatar) return res.status(400).json({ message: '请提供头像URL' })
+    await User.findByIdAndUpdate(userId, { avatar })
+    res.json({ message: '头像更新成功', avatar })
+  } catch { res.status(500).json({ message: '更新失败' }) }
+}
+
+// ═══ 管理员：用户列表 ═══
+exports.adminListUsers = async (req, res) => {
+  try {
+    const auth = req.headers.authorization; if (!auth) return res.status(401).json({ message: '请先登录' })
+    const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+    const role = decoded.split(':')[2]; if (role !== 'admin') return res.status(403).json({ message: '无权限' })
+    const users = await User.find({}, 'username nickname avatar role userId banned createdAt').sort({ createdAt: -1 }).lean()
+    res.json({ list: users })
+  } catch { res.status(500).json({ message: '查询失败' }) }
+}
+
+// ═══ 管理员：封禁/解封 ═══
+exports.adminToggleBan = async (req, res) => {
+  try {
+    const auth = req.headers.authorization; if (!auth) return res.status(401).json({ message: '请先登录' })
+    const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+    const role = decoded.split(':')[2]; if (role !== 'admin') return res.status(403).json({ message: '无权限' })
+    const user = await User.findById(req.body.userId)
+    if (!user) return res.status(404).json({ message: '用户不存在' })
+    if (user.role === 'admin') return res.status(400).json({ message: '不能封禁管理员' })
+    user.banned = !user.banned
+    await user.save()
+    res.json({ message: user.banned ? '已封禁' : '已解封', banned: user.banned })
+  } catch { res.status(500).json({ message: '操作失败' }) }
 }

@@ -3,7 +3,7 @@
     <van-nav-bar title="个人中心" />
 
     <div class="user-header">
-      <van-image round width="64" height="64" :src="userStore.userInfo?.avatar || defaultAvatar" />
+      <van-image round width="64" height="64" :src="userStore.userInfo?.avatar || defaultAvatar" @click="showAvatar=true" style="cursor:pointer;" />
       <template v-if="userStore.isLogin">
         <div class="user-name">{{ userStore.userInfo?.nickname || '用户' }}</div>
         <div class="user-id" @click="copyId">
@@ -22,22 +22,10 @@
 
     <!-- 用户统计数据 -->
     <div class="user-stats" v-if="userStore.isLogin">
-      <div class="ustat">
-        <div class="ustat-val">{{ userStats.total }}</div>
-        <div class="ustat-lbl">总生成</div>
-      </div>
-      <div class="ustat">
-        <div class="ustat-val">{{ userStats.today }}</div>
-        <div class="ustat-lbl">今日</div>
-      </div>
-      <div class="ustat">
-        <div class="ustat-val">{{ formatNum(userStats.totalWords) }}</div>
-        <div class="ustat-lbl">累计字数</div>
-      </div>
-      <div class="ustat">
-        <div class="ustat-val">{{ formatNum(userStats.totalTokens) }}</div>
-        <div class="ustat-lbl">累计Token</div>
-      </div>
+      <div class="ustat"><div class="ustat-val">{{ userStats.total }}</div><div class="ustat-lbl">总生成</div></div>
+      <div class="ustat"><div class="ustat-val">{{ userStats.today }}</div><div class="ustat-lbl">今日</div></div>
+      <div class="ustat"><div class="ustat-val">{{ formatNum(userStats.totalWords) }}</div><div class="ustat-lbl">累计字数</div></div>
+      <div class="ustat"><div class="ustat-val">{{ formatNum(userStats.totalTokens) }}</div><div class="ustat-lbl">累计Token</div></div>
     </div>
 
     <van-cell-group inset style="margin-top:12px;">
@@ -50,13 +38,19 @@
       <van-cell title="我的收藏" is-link to="/record?tab=favorites">
         <template #icon><StarIcon size="22" fill="#6b6255" style="margin-right:14px;"/></template>
       </van-cell>
+      <van-cell v-if="userStore.isLogin" title="设置头像" is-link @click="showAvatar=true">
+        <template #icon><UserIcon size="22" fill="#6b6255" style="margin-right:14px;"/></template>
+      </van-cell>
+      <van-cell v-if="userStore.isLogin" title="修改密码" is-link @click="showPwd=true">
+        <template #icon><LockIcon size="22" fill="#6b6255" style="margin-right:14px;"/></template>
+      </van-cell>
       <van-cell v-if="userStore.isAdmin" title="后台管理" is-link to="/admin">
         <template #icon><SettingIcon size="22" fill="#6b6255" style="margin-right:14px;"/></template>
       </van-cell>
       <van-cell title="用户协议" is-link to="/agreement">
         <template #icon><DocDetailIcon size="22" fill="#6b6255" style="margin-right:14px;"/></template>
       </van-cell>
-      <van-cell title="GitHub" is-link url="https://github.com">
+      <van-cell title="GitHub" is-link url="https://github.com/ljy532126/ai-clip-scrip">
         <template #icon><GithubIcon size="22" fill="#6b6255" style="margin-right:14px;"/></template>
       </van-cell>
       <van-cell title="关于平台" value="v1.0.0">
@@ -64,10 +58,37 @@
       </van-cell>
     </van-cell-group>
 
-    <!-- 登录/注册弹窗 — 底部弹出 -->
+    <!-- 设置头像弹窗 -->
+    <van-popup v-model:show="showAvatar" position="bottom" round :style="{ height: 'auto' }" :close-on-click-overlay="true">
+      <div class="auth-panel">
+        <div class="auth-header"><div class="auth-tabs"><div class="auth-tab active">设置头像</div></div><div class="auth-close" @click="showAvatar=false">✕</div></div>
+        <div class="auth-body">
+          <div class="avatar-presets">
+            <img v-for="a in avatarPresets" :key="a" :src="a" class="apreset" :class="{ active: avatarUrl===a }" @click="avatarUrl=a" />
+          </div>
+          <div class="auth-field">
+            <input v-model="avatarUrl" class="auth-input" placeholder="或输入头像图片URL" />
+          </div>
+          <button class="auth-btn" @click="onUpdateAvatar">保 存 头 像</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- 修改密码弹窗 -->
+    <van-popup v-model:show="showPwd" position="bottom" round :style="{ height: 'auto' }" :close-on-click-overlay="true">
+      <div class="auth-panel">
+        <div class="auth-header"><div class="auth-tabs"><div class="auth-tab active">修改密码</div></div><div class="auth-close" @click="showPwd=false">✕</div></div>
+        <div class="auth-body">
+          <div class="auth-field"><LockIcon size="18" fill="#9e9689"/><input v-model="pwdForm.oldPwd" class="auth-input" type="password" placeholder="请输入旧密码" /></div>
+          <div class="auth-field"><LockIcon size="18" fill="#9e9689"/><input v-model="pwdForm.newPwd" class="auth-input" type="password" placeholder="请输入新密码（至少3位）" /></div>
+          <button class="auth-btn" @click="onChangePwd">确 认 修 改</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- 登录/注册弹窗 -->
     <van-popup v-model:show="showLogin" position="bottom" round :style="{ height: 'auto', maxHeight: '70vh' }" :close-on-click-overlay="true" @click-overlay="resetForm">
       <div class="auth-panel">
-        <!-- 标题栏 -->
         <div class="auth-header">
           <div class="auth-tabs">
             <div class="auth-tab" :class="{ active: loginMode === 'login' }" @click="loginMode = 'login'">登录</div>
@@ -75,22 +96,10 @@
           </div>
           <div class="auth-close" @click="showLogin = false">✕</div>
         </div>
-
-        <!-- 表单 -->
         <div class="auth-body">
-          <div class="auth-field">
-            <UserIcon size="18" fill="#9e9689"/>
-            <input ref="usernameInput" v-model="loginForm.username" class="auth-input" placeholder="请输入用户名" autocomplete="off" name="random-user" />
-          </div>
-          <div class="auth-field">
-            <LockIcon size="18" fill="#9e9689"/>
-            <input v-model="loginForm.password" class="auth-input" type="password" placeholder="请输入密码" autocomplete="new-password" name="random-pass" />
-          </div>
-
-          <button class="auth-btn" @click="loginMode === 'login' ? onLogin() : onRegister()">
-            {{ loginMode === 'login' ? '登 录' : '注 册' }}
-          </button>
-
+          <div class="auth-field"><UserIcon size="18" fill="#9e9689"/><input ref="usernameInput" v-model="loginForm.username" class="auth-input" placeholder="请输入用户名" autocomplete="off" name="random-user" /></div>
+          <div class="auth-field"><LockIcon size="18" fill="#9e9689"/><input v-model="loginForm.password" class="auth-input" type="password" placeholder="请输入密码" autocomplete="new-password" name="random-pass" /></div>
+          <button class="auth-btn" @click="loginMode === 'login' ? onLogin() : onRegister()">{{ loginMode === 'login' ? '登 录' : '注 册' }}</button>
           <p class="auth-hint" v-if="loginMode === 'register'">输入用户名和密码即可创建账号，每人拥有唯一ID</p>
         </div>
       </div>
@@ -115,7 +124,18 @@ const IconHome=Home;const IconMagic=Magic;const IconTool=Tool;const IconHistory=
 import { showToast, showSuccessToast, showFailToast } from 'vant'
 const userStore = useUserStore(); const themeStore = useThemeStore()
 const active = ref(4); const showLogin = ref(false); const loginMode = ref('login'); const usernameInput = ref(null)
+const showAvatar = ref(false); const showPwd = ref(false)
 const defaultAvatar = 'https://img.yzcdn.cn/vant/cat.jpeg'
+const avatarUrl = ref(userStore.userInfo?.avatar || defaultAvatar)
+const avatarPresets = [
+  'https://img.yzcdn.cn/vant/cat.jpeg',
+  'https://cdn.jsdelivr.net/npm/@vant/assets/cat.jpeg',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=clip',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=ai',
+  'https://api.dicebear.com/7.x/micah/svg?seed=editor',
+  'https://api.dicebear.com/7.x/thumbs/svg?seed=video'
+]
+const pwdForm = reactive({ oldPwd: '', newPwd: '' })
 const loginForm = reactive({ username: '', password: '' })
 const userStats = reactive({ total: 0, today: 0, totalWords: 0, totalTokens: 0 })
 
@@ -146,6 +166,26 @@ const onRegister = async () => {
   } catch (err) { showFailToast(err.message) }
 }
 
+const onChangePwd = async () => {
+  if (!pwdForm.oldPwd || !pwdForm.newPwd) { showToast('请填写新旧密码'); return }
+  if (pwdForm.newPwd.length < 3) { showToast('新密码至少3位'); return }
+  try {
+    await userAPI.changePassword({ oldPassword: pwdForm.oldPwd, newPassword: pwdForm.newPwd })
+    showSuccessToast('密码修改成功，请重新登录')
+    userStore.logout(); showPwd.value = false; pwdForm.oldPwd = ''; pwdForm.newPwd = ''
+  } catch (err) { showFailToast(err.message) }
+}
+
+const onUpdateAvatar = async () => {
+  if (!avatarUrl.value.trim()) { showToast('请输入头像URL'); return }
+  try {
+    const d = await userAPI.updateAvatar({ avatar: avatarUrl.value.trim() })
+    userStore.userInfo.avatar = d.avatar
+    localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
+    showSuccessToast('头像已更新'); showAvatar.value = false
+  } catch (err) { showFailToast(err.message) }
+}
+
 const resetForm = () => { loginForm.username = ''; loginForm.password = ''; loginMode.value = 'login' }
 const formatNum = n => n >= 10000 ? (n / 10000).toFixed(1) + '万' : n.toLocaleString()
 const copyId = () => {
@@ -169,50 +209,27 @@ const copyId = () => {
 .ustat-val { font-size: 20px; font-weight: 700; color: var(--accent); }
 .ustat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-/* 底部登录面板 */
-.auth-panel {
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  overflow: hidden;
-}
-.auth-header {
-  display: flex; align-items: center; padding: 0 16px;
-  border-bottom: 1px solid var(--border-color);
-}
+/* 头像预设 */
+.avatar-presets { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.apreset { width: 56px; height: 56px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; object-fit: cover; }
+.apreset.active { border-color: var(--accent); }
+
+/* 底部弹出面板 */
+.auth-panel { background: var(--bg-surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; overflow: hidden; }
+.auth-header { display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--border-color); }
 .auth-tabs { display: flex; flex: 1; }
-.auth-tab {
-  flex: 1; text-align: center; padding: 16px 0; font-size: 16px; font-weight: 600;
-  color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
-}
+.auth-tab { flex: 1; text-align: center; padding: 16px 0; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
 .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.auth-close {
-  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color);
-  display: flex; align-items: center; justify-content: center; font-size: 16px;
-  color: var(--text-muted); cursor: pointer; flex-shrink: 0;
-}
+.auth-close { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
 
 .auth-body { padding: 24px 20px 30px; display: flex; flex-direction: column; gap: 14px; }
-.auth-field {
-  display: flex; align-items: center; gap: 10px;
-  padding: 0 14px; background: var(--bg-input); border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm); transition: border-color 0.2s;
-}
+.auth-field { display: flex; align-items: center; gap: 10px; padding: 0 14px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-sm); transition: border-color 0.2s; }
 .auth-field:focus-within { border-color: var(--accent); }
-.auth-input {
-  flex: 1; padding: 13px 0; border: none; outline: none; background: transparent;
-  color: var(--text-primary); font-size: 15px;
-}
+.auth-input { flex: 1; padding: 13px 0; border: none; outline: none; background: transparent; color: var(--text-primary); font-size: 15px; }
 .auth-input::placeholder { color: var(--text-muted); }
 
-.auth-btn {
-  width: 100%; padding: 14px; border: none; border-radius: 50px;
-  background: linear-gradient(135deg, #d4914a, #c97b6b);
-  color: #fff; font-size: 16px; font-weight: 700;
-  cursor: pointer; margin-top: 6px; letter-spacing: 4px;
-}
+.auth-btn { width: 100%; padding: 14px; border: none; border-radius: 50px; background: linear-gradient(135deg, #d4914a, #c97b6b); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 6px; letter-spacing: 4px; }
 .auth-btn:active { opacity: 0.9; transform: scale(0.98); }
 
-.auth-hint {
-  font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5;
-}
+.auth-hint { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; }
 </style>

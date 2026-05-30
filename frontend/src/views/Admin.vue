@@ -108,6 +108,31 @@
         </div>
       </van-tab>
 
+      <!-- ====== 用户管理 ====== -->
+      <van-tab title="用户">
+        <div class="user-mgmt">
+          <div class="user-table-wrap">
+            <table class="rank-table">
+              <thead><tr><th>头像</th><th>昵称</th><th>UID</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="u in userList" :key="u._id" :class="{ banned: u.banned }">
+                  <td><van-image round width="32" height="32" :src="u.avatar || defaultAvatar" /></td>
+                  <td>{{ u.nickname || u.username }}</td>
+                  <td style="font-family:monospace;font-size:12px;">{{ u.userId }}</td>
+                  <td><van-tag :type="u.role==='admin'?'danger':''" size="mini">{{ u.role==='admin'?'管理员':'用户' }}</van-tag></td>
+                  <td><van-tag :type="u.banned?'danger':'success'" size="mini">{{ u.banned?'已封禁':'正常' }}</van-tag></td>
+                  <td style="font-size:12px;color:var(--text-muted);">{{ formatTime(u.createdAt) }}</td>
+                  <td>
+                    <van-button v-if="u.role!=='admin'" size="mini" :plain="!u.banned" :type="u.banned?'success':'danger'" @click="toggleBanUser(u)">{{ u.banned?'解封':'封禁' }}</van-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <van-empty v-if="!userList.length" description="暂无用户" />
+        </div>
+      </van-tab>
+
       <!-- ====== LLM 大模型 ====== -->
       <van-tab title="LLM">
         <div class="llm-tab">
@@ -229,12 +254,14 @@ const activeTab = ref(0)
 
 // --- Prompt管理 ---
 const agents = ref([]); const showEditor = ref(false); const editingAgent = ref(null); const editingPrompt = ref(''); const saving = ref(false)
+const userList = ref([]); const defaultAvatar = 'https://img.yzcdn.cn/vant/cat.jpeg'
 
 onMounted(async () => {
   try { const d = await adminAPI.getPrompts(); agents.value = (d.list || []).map(a => ({ ...a, color: agentColor(a.key) })) } catch {}
   try { Object.assign(stats, await adminAPI.getStats()) } catch {}
   try { const a = await announceAPI.getList(); announcements.value = a.list || [] } catch {}
   try { const l = await adminAPI.getLLMConfigs(); llmList.value = l.list || [] } catch {}
+  try { const u = await adminAPI.getUsers(); userList.value = u.list || [] } catch {}
 })
 const openEdit = (a) => { editingAgent.value = a; editingPrompt.value = a.prompt; showEditor.value = true }
 const savePrompt = async () => {
@@ -326,6 +353,14 @@ const testConnect = async (llm) => {
   if (idx >= 0) llmList.value.splice(idx, 1, { ...llm })
 }
 
+const toggleBanUser = async (u) => {
+  try {
+    const d = await adminAPI.toggleBan(u._id)
+    u.banned = d.banned
+    showToast(d.message)
+  } catch (err) { showFailToast(err.message) }
+}
+
 const formatNum = n => n >= 10000 ? (n / 10000).toFixed(1) + '万' : n.toLocaleString()
 const formatTime = (iso) => iso ? `${new Date(iso).getMonth() + 1}/${new Date(iso).getDate()} ${String(new Date(iso).getHours()).padStart(2, '0')}:${String(new Date(iso).getMinutes()).padStart(2, '0')}` : ''
 const formatTimeShort = (iso) => {
@@ -383,6 +418,11 @@ const formatTimeShort = (iso) => {
 .rank-table .top3 td { background: rgba(212,145,74,0.04); font-weight: 600; }
 .rank-col { font-size: 16px; text-align: center !important; width: 32px; }
 .num-col { font-weight: 600; color: var(--accent) !important; }
+.banned td { opacity: 0.5; text-decoration: line-through; }
+
+/* 用户管理 */
+.user-mgmt { padding: 12px; }
+.user-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* LLM配置 */
 .llm-tab { padding: 12px; }
