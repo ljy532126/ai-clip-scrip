@@ -2,7 +2,7 @@
   <div class="admin-page">
     <van-nav-bar title="后台管理" left-arrow @click-left="$router.back()" />
 
-    <van-tabs v-model:active="activeTab" sticky swipeable>
+    <van-tabs v-model:active="activeTab" sticky>
       <!-- ====== Prompt管理 ====== -->
       <van-tab title="Prompt">
         <div class="prompt-list">
