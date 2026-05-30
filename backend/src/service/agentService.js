@@ -37,20 +37,23 @@ exports.generate = async (agentKey, params) => {
   const agent = agents[agentKey]
   const normalizedParams = agent.normalizeParams(params)
 
-  // 创意模式：用创意 Prompt 覆盖原有 System Prompt
+  // 创意模式：creative.txt 作为通用基座，注入 Agent 类型和关键词
   let systemPrompt
   if (params.creativeMode) {
     const fs = require('fs'); const path = require('path')
     const creativeFP = path.join(__dirname, '../prompt/creative.txt')
-    systemPrompt = fs.existsSync(creativeFP) ? fs.readFileSync(creativeFP, 'utf-8') : agent.getSystemPrompt()
+    let baseCreative = fs.existsSync(creativeFP) ? fs.readFileSync(creativeFP, 'utf-8') : ''
+    baseCreative = baseCreative
+      .replace('{{AGENT_TYPE}}', agent.agentName)
+      .replace('{{KEYWORDS}}', params.keywords || '')
+    systemPrompt = baseCreative
   } else {
     systemPrompt = agent.getSystemPrompt()
   }
 
   const userPrompt = agent.buildUserPrompt(normalizedParams)
-  // 创意模式下追加强调
   const finalUserPrompt = params.creativeMode
-    ? userPrompt + '\n\n【重要】以上是参考参数。\n请严格按照【魔性互怼+人设反差+玩梗洗脑+轻种草】风格输出：\n先用2-3个角色搞笑互怼玩梗，然后自然过渡到主题轻种草。全程口语化、快节奏、玩梗密集、不上价值不说教、让人想看完还想转发。'
+    ? userPrompt + '\n\n【重要】以上是参考参数。\n请严格按照上面 System Prompt 中的【魔性互怼+人设反差+玩梗洗脑+轻种草】风格输出，内容必须围绕"{{AGENT_TYPE}} - {{KEYWORDS}}"。先用2-3个IP角色搞笑互怼玩梗，然后自然过渡到主题轻种草。全程口语化、快节奏、玩梗密集、不上价值不说教、让人想看完还想转发。'.replace('{{AGENT_TYPE}}', agent.agentName).replace('{{KEYWORDS}}', params.keywords || '')
     : userPrompt
 
   // 从DB读取当前激活的LLM配置
