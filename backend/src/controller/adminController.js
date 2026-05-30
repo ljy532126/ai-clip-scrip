@@ -81,6 +81,15 @@ exports.getStats = async (req, res) => {
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay())
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
+    // 日期筛选（tokenRanking/topUsers 专用）
+    const { startDate, endDate } = req.query
+    let dateFilter = {}
+    if (startDate || endDate) {
+      dateFilter.createdAt = {}
+      if (startDate) dateFilter.createdAt.$gte = new Date(startDate)
+      if (endDate) dateFilter.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z')
+    }
+
     const [total, today, week, month, totalWordsObj] = await Promise.all([
       Record.countDocuments(),
       Record.countDocuments({ createdAt: { $gte: todayStart } }),
@@ -92,7 +101,6 @@ exports.getStats = async (req, res) => {
     const totalWords = totalWordsObj[0]?.totalWords || 0
     const avgWords = Math.round(totalWordsObj[0]?.avgWords || 0)
 
-    // 管理员才看详细分布
     let agents = {}, days7 = [], topUsers = [], tokenRanking = [], userCount = 0
     if (role === 'admin') {
       const agentStats = await Record.aggregate([{ $group: { _id: '$agent', count: { $sum: 1 } } }])
@@ -105,20 +113,33 @@ exports.getStats = async (req, res) => {
         days7.push({ date: `${d.getMonth() + 1}/${d.getDate()}`, count: await Record.countDocuments({ createdAt: { $gte: start, $lt: end } }) })
       }
 
-      // 注册用户总数
       userCount = await User.countDocuments()
 
-      // 用户排名（按生成次数）
+      // 用户排名 + Token排名（支持日期筛选）
+      const rankMatch = {
+        userId: { $exists: true, $ne: '' },
+        ...dateFilter
+      }
       const userRanking = await Record.aggregate([
-        { $match: { userId: { $exists: true, $ne: null } } },
-        { $group: { _id: '$userId', count: { $sum: 1 }, totalWords: { $sum: '$wordCount' }, totalTokens: { $sum: '$tokensUsed' }, lastGen: { $max: '$createdAt' } } },
+        { $match: rankMatch },
+        { $group: { _id: '$userId', count: { $sum: 1 }, totalWords: { $sum: '$wordCount' }, totalTokens: { $sum: '$tokensUsed' }, promptTokens: { $sum: '$promptTokens' }, completionTokens: { $sum: '$completionTokens' }, lastGen: { $max: '$createdAt' } } },
         { $sort: { count: -1 } },
         { $limit: 20 }
       ])
       const userIds = userRanking.map(u => u._id)
-      const userDocs = userIds.length > 0 ? await User.find({ _id: { $in: userIds } }, 'username nickname userId').lean() : []
+      const userDocs = userIds.length > 0
+        ? await User.find({
+            $or: [
+              { _id: { $in: userIds.filter(id => id.match(/^[0-9a-fA-F]{24}$/)) } },
+              { userId: { $in: userIds } }
+            ]
+          }, 'username nickname userId').lean()
+        : []
       const userMap = {}
-      for (const u of userDocs) userMap[u._id.toString()] = u
+      for (const u of userDocs) {
+        userMap[u._id.toString()] = u
+        if (u.userId) userMap[u.userId] = u
+      }
       topUsers = userRanking.map((r, i) => ({
         rank: i + 1,
         userId: userMap[r._id.toString()]?.userId || '未知',
@@ -126,10 +147,11 @@ exports.getStats = async (req, res) => {
         count: r.count,
         totalWords: r.totalWords || 0,
         totalTokens: r.totalTokens || 0,
+        promptTokens: r.promptTokens || 0,
+        completionTokens: r.completionTokens || 0,
         lastGen: r.lastGen
       }))
 
-      // Token 消耗排名（按 totalTokens 排）
       tokenRanking = [...topUsers].sort((a, b) => b.totalTokens - a.totalTokens).slice(0, 10).map((u, i) => ({ ...u, rank: i + 1 }))
     }
 

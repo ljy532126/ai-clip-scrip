@@ -35,7 +35,10 @@ exports.generate = async (req, res, next) => {
         agent, keywords, detail: detail || 'standard',
         styles: styles || [style || 'professional'],
         duration: duration || 60, wordCount: wordCount || 500,
-        documents, tokensUsed: result.tokensUsed || 0, userId, createdAt: new Date()
+        documents, tokensUsed: result.tokensUsed || 0,
+        promptTokens: result.promptTokens || 0,
+        completionTokens: result.completionTokens || 0,
+        userId, createdAt: new Date()
       })
       recordId = doc._id.toString()
     } catch (dbErr) {

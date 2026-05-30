@@ -134,7 +134,9 @@ async function callLLM(llm, systemPrompt, userPrompt, maxTokens) {
   const usage = response.data?.usage || {}
   return {
     content,
-    tokensUsed: usage.total_tokens || (usage.prompt_tokens || 0) + (usage.completion_tokens || 0) + (usage.completion_tokens_details?.reasoning_tokens || 0)
+    tokensUsed: usage.total_tokens || 0,
+    promptTokens: usage.prompt_tokens || 0,
+    completionTokens: usage.completion_tokens || 0
   }
 }
 

@@ -79,22 +79,31 @@
             </div>
           </div>
           <!-- Token消耗排名 -->
-          <div class="chart-box" v-if="stats.tokenRanking && stats.tokenRanking.length">
+          <div class="chart-box">
             <div class="section-label"><RankingIcon size="16" fill="#d4914a" style="vertical-align:middle;margin-right:4px;"/>Token 消耗排名 TOP 10</div>
-            <div class="rank-table-wrap">
+            <div class="date-filter">
+              <input type="date" v-model="rankStartDate" class="date-input" @change="refreshStats" />
+              <span class="date-sep">至</span>
+              <input type="date" v-model="rankEndDate" class="date-input" @change="refreshStats" />
+              <van-button size="mini" plain v-if="rankStartDate || rankEndDate" @click="clearDateFilter">清除</van-button>
+            </div>
+            <div class="rank-table-wrap" v-if="stats.tokenRanking && stats.tokenRanking.length">
               <table class="rank-table">
-                <thead><tr><th>#</th><th>用户ID</th><th>昵称</th><th>总Token</th><th>生成次数</th></tr></thead>
+                <thead><tr><th>#</th><th>用户</th><th>昵称</th><th>总Token</th><th>输入</th><th>输出</th><th>次数</th></tr></thead>
                 <tbody>
                   <tr v-for="u in stats.tokenRanking" :key="'tk'+u.userId" :class="{ 'top3': u.rank <= 3 }">
                     <td class="rank-col">{{ u.rank <= 3 ? ['🥇','🥈','🥉'][u.rank-1] : u.rank }}</td>
                     <td>{{ u.userId }}</td>
                     <td>{{ u.nickname }}</td>
                     <td class="num-col">{{ formatNum(u.totalTokens) }}</td>
+                    <td class="num-col">{{ formatNum(u.promptTokens) }}</td>
+                    <td class="num-col">{{ formatNum(u.completionTokens) }}</td>
                     <td class="num-col">{{ u.count }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            <div class="empty-chart" v-else>暂无数据</div>
           </div>
         </div>
       </van-tab>
@@ -258,6 +267,19 @@ const barChartData = computed(() => {
 })
 const barChartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
 
+// 日期筛选
+import axios from 'axios'
+const httpDate = axios.create({ baseURL: '/api' })
+const rankStartDate = ref('')
+const rankEndDate = ref('')
+const refreshStats = async () => {
+  const params = {}
+  if (rankStartDate.value) params.startDate = rankStartDate.value
+  if (rankEndDate.value) params.endDate = rankEndDate.value
+  try { Object.assign(stats, await httpDate.get('/admin/stats', { params })) } catch {}
+}
+const clearDateFilter = () => { rankStartDate.value = ''; rankEndDate.value = ''; refreshStats() }
+
 // --- 公告 ---
 const announcements = ref([])
 const annForm = reactive({ title: '', content: '', showOnce: false })
@@ -348,6 +370,14 @@ const formatTimeShort = (iso) => {
 
 /* 排名表格 */
 .rank-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.date-filter {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.date-input {
+  padding: 6px 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  background: var(--bg-input); color: var(--text-primary); font-size: 12px; outline: none;
+}
+.date-sep { font-size: 12px; color: var(--text-muted); }
 .rank-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
 .rank-table th, .rank-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: left; white-space: nowrap; }
 .rank-table th { font-weight: 600; color: var(--text-secondary); font-size: 11px; }
