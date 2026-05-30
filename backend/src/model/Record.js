@@ -14,7 +14,7 @@ const recordSchema = new mongoose.Schema({
     seo: String
   },
   tokensUsed: { type: Number, default: 0 },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  userId: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 })
 

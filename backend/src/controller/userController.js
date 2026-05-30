@@ -91,6 +91,7 @@ exports.getMyStats = async (req, res) => {
     const [total, today, wordAgg] = await Promise.all([
       Record.countDocuments({ userId: userObjId }),
       Record.countDocuments({ userId: userObjId, createdAt: { $gte: todayStart } }),
+      // userId 现在是 String，直接用字符串匹配
       Record.aggregate([
         { $match: { userId: userObjId } },
         { $group: { _id: null, totalWords: { $sum: '$wordCount' }, totalTokens: { $sum: '$tokensUsed' } } }
