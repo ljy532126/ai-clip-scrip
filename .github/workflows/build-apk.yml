@@ -48,7 +48,7 @@ jobs:
         working-directory: frontend
         run: npx cap sync android
 
-      - name: Build APK
+      - name: Build APKs (Debug + Release)
         working-directory: frontend/android
         run: sh gradlew assembleDebug assembleRelease -x lint
 
