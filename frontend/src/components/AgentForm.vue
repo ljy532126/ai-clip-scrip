@@ -172,7 +172,7 @@ const onSubmit = () => {
 .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; background: var(--accent-soft); color: var(--accent); font-size: 11px; cursor: pointer; border: 1px solid rgba(212,145,74,0.2); }
 
 .switch-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.switch-item { flex: 1; min-width: 100px; display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: var(--bg-input); border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary); }
+.switch-item { flex: 1; min-width: 80px; display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--bg-input); border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary); }
 .creative-tip { font-size: 11px; color: var(--accent); margin-top: 4px; text-align: center; }
 
 .progress-box { margin-top: 14px; }
