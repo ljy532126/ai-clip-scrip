@@ -56,9 +56,11 @@
     <!-- 额外开关 -->
     <div class="form-section">
       <div class="switch-row">
+        <label class="switch-item"><span>创意风格</span><van-switch v-model="form.creativeMode" size="22" /></label>
         <label class="switch-item"><span>中英双语</span><van-switch v-model="form.bilingual" size="22" /></label>
         <label class="switch-item"><span>敏感词过滤</span><van-switch v-model="form.filterSensitive" size="22" /></label>
       </div>
+      <p class="creative-tip" v-if="form.creativeMode">魔性互怼 + 人设反差 + 玩梗洗脑，开启后所有Agent切换为沙雕创意风格</p>
     </div>
 
     <!-- 生成按钮 -->
@@ -125,7 +127,7 @@ const detailOptions = [
 
 const form = reactive({
   agent: generateStore.currentAgent, keywords: '', duration: 60, detail: 'standard',
-  styles: ['professional'], wordCount: 500, bilingual: false, filterSensitive: true
+  styles: ['professional'], wordCount: 500, bilingual: false, filterSensitive: true, creativeMode: false
 })
 const estimateTime = computed(() => ({ standard:25, detailed:50, ultra:80 }[form.detail] || 25))
 
@@ -139,8 +141,8 @@ const styleLabel = (v) => (styleOptions.find(o=>o.value===v)||{}).text||v
 const formatDuration = (s) => { const m=Math.floor(s/60); const sec=s%60; return m>0?`${m}分${sec||''}秒`:`${sec}秒` }
 const onSubmit = () => {
   if (!form.keywords.trim() || props.loading) return
-  const { agent,keywords,duration,detail,styles,wordCount,bilingual,filterSensitive } = form
-  emit('submit', { agent,keywords:keywords.trim(),duration,detail,styles,wordCount,bilingual,filterSensitive })
+  const { agent,keywords,duration,detail,styles,wordCount,bilingual,filterSensitive,creativeMode } = form
+  emit('submit', { agent,keywords:keywords.trim(),duration,detail,styles,wordCount,bilingual,filterSensitive,creativeMode })
 }
 </script>
 
@@ -169,8 +171,9 @@ const onSubmit = () => {
 .selected-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; background: var(--accent-soft); color: var(--accent); font-size: 11px; cursor: pointer; border: 1px solid rgba(212,145,74,0.2); }
 
-.switch-row { display: flex; gap: 16px; }
-.switch-item { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: var(--bg-input); border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 13px; color: var(--text-secondary); }
+.switch-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.switch-item { flex: 1; min-width: 100px; display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: var(--bg-input); border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary); }
+.creative-tip { font-size: 11px; color: var(--accent); margin-top: 4px; text-align: center; }
 
 .progress-box { margin-top: 14px; }
 .progress-info { display: flex; justify-content: space-between; margin: 6px 0; font-size: 12px; }

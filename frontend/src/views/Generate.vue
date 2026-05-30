@@ -60,7 +60,8 @@ const handleGenerate = async (params) => {
       agent: params.agent || generateStore.currentAgent, keywords: params.keywords,
       duration: params.duration, detail: params.detail || 'standard',
       styles: params.styles, style: params.styles?.[0] || 'professional',
-      wordCount: params.wordCount, bilingual: params.bilingual, filterSensitive: params.filterSensitive
+      wordCount: params.wordCount, bilingual: params.bilingual, filterSensitive: params.filterSensitive,
+      creativeMode: params.creativeMode || false
     })
     generateStore.setResults(data); showToast('生成成功')
   } catch (err) { generateStore.setError(err.message); showFailToast(err.message) }

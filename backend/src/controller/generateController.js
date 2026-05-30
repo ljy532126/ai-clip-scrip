@@ -7,14 +7,14 @@ const zipDownload = require('../utils/zipDownload')
 // 提交生成任务
 exports.generate = async (req, res, next) => {
   try {
-    const { agent, keywords, duration, detail, styles, style, wordCount, bilingual, filterSensitive } = req.body
+    const { agent, keywords, duration, detail, styles, style, wordCount, bilingual, filterSensitive, creativeMode } = req.body
     if (!agent || !keywords) {
       return res.status(400).json({ message: '请选择Agent并输入关键词' })
     }
 
     const result = await agentService.generate(agent, {
       keywords, duration: duration || 60, detail: detail || 'standard',
-      styles: styles || [style || 'professional'], wordCount: wordCount || 500
+      styles: styles || [style || 'professional'], wordCount: wordCount || 500, creativeMode: !!creativeMode
     })
 
     const documents = fileGenerate.parseAndGenerate(agent, result.content)
