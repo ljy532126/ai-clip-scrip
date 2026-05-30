@@ -37,8 +37,11 @@ function parseToken(req) {
   try {
     const auth = req.headers.authorization
     if (!auth) return { role: 'guest', userObjId: null, userId: '' }
-    const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+    // "Bearer xxx" => "xxx"
+    const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : auth.trim()
+    const decoded = Buffer.from(token, 'base64').toString()
     const parts = decoded.split(':')
+    // parts: [mongoId, userId, role, timestamp]
     return { role: parts[2] || 'guest', userObjId: parts[0], userId: parts[1] || '' }
   } catch { return { role: 'guest', userObjId: null, userId: '' } }
 }
@@ -126,19 +129,21 @@ exports.getStats = async (req, res) => {
         { $sort: { count: -1 } },
         { $limit: 20 }
       ])
-      const userIds = userRanking.map(u => u._id)
-      const userDocs = userIds.length > 0
+
+      // 双向匹配：既是 User.userId 也可能是 User._id
+      const userIdValues = userRanking.map(u => u._id).filter(Boolean)
+      const userDocs = userIdValues.length > 0
         ? await User.find({
             $or: [
-              { _id: { $in: userIds.filter(id => id.match(/^[0-9a-fA-F]{24}$/)) } },
-              { userId: { $in: userIds } }
-            ]
+              { userId: { $in: userIdValues } },
+              { _id: { $in: userIdValues.filter(id => /^[0-9a-fA-F]{24}$/.test(id)) } }
+            ].filter(g => g[Object.keys(g)[0]].$in.length > 0)
           }, 'username nickname userId').lean()
         : []
       const userMap = {}
       for (const u of userDocs) {
+        userMap[u.userId || u._id.toString()] = u
         userMap[u._id.toString()] = u
-        if (u.userId) userMap[u.userId] = u
       }
       topUsers = userRanking.map((r, i) => ({
         rank: i + 1,
@@ -161,8 +166,9 @@ exports.getStats = async (req, res) => {
       apiCalls: { total, today, week, month },
       role
     })
-  } catch {
-    res.json({ total: 0, today: 0, week: 0, month: 0, totalWords: 0, avgWords: 0, agents: {}, days7: [], topUsers: [], role: 'guest' })
+  } catch (e) {
+    console.error('getStats error:', e.message, e.stack)
+    res.json({ total: 0, today: 0, week: 0, month: 0, totalWords: 0, avgWords: 0, agents: {}, days7: [], topUsers: [], role: 'guest', error: e.message })
   }
 }
 

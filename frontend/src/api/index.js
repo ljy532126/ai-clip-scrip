@@ -63,6 +63,7 @@ export const adminAPI = {
   getPrompts: () => http.get('/admin/prompts'),
   updatePrompt: (id, data) => http.put(`/admin/prompt/${id}`, data),
   getStats: () => http.get('/admin/stats'),
+  getRankedStats: (params) => http.get('/admin/stats', { params }),
   createAnnouncement: (data) => http.post('/admin/announcement', data),
   deleteAnnouncement: (id) => http.delete(`/admin/announcement/${id}`),
   // LLM 配置

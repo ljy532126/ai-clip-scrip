@@ -268,15 +268,13 @@ const barChartData = computed(() => {
 const barChartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
 
 // 日期筛选
-import axios from 'axios'
-const httpDate = axios.create({ baseURL: '/api' })
 const rankStartDate = ref('')
 const rankEndDate = ref('')
 const refreshStats = async () => {
   const params = {}
   if (rankStartDate.value) params.startDate = rankStartDate.value
   if (rankEndDate.value) params.endDate = rankEndDate.value
-  try { Object.assign(stats, await httpDate.get('/admin/stats', { params })) } catch {}
+  try { Object.assign(stats, await adminAPI.getRankedStats(params)) } catch {}
 }
 const clearDateFilter = () => { rankStartDate.value = ''; rankEndDate.value = ''; refreshStats() }
 
