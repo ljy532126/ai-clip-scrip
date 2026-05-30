@@ -6,6 +6,10 @@ dist/
 .DS_Store
 ds-proxy.js
 deploy-checklist.txt
+project.md
+structure.md
+feature.md
+rule.md
 # Android build
 frontend/android/app/build/
 frontend/android/build/
