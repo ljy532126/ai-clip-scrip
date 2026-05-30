@@ -40,45 +40,34 @@ exports.subtitle = (req, res) => {
   res.json({ result })
 }
 
-// AI文案润色
+// AI文案润色 — 用当前激活的 LLM
 exports.polish = async (req, res, next) => {
   const { content, style } = req.body
-  if (!content) {
-    return res.status(400).json({ message: '请输入需要润色的文案' })
-  }
+  if (!content) return res.status(400).json({ message: '请输入需要润色的文案' })
 
-  // 有API Key调用AI，否则本地处理
-  if (config.mimo.apiKey) {
-    try {
-      const response = await axios.post(
-        `${config.mimo.apiUrl}/chat/completions`,
-        {
-          model: config.mimo.model,
-          messages: [
-            { role: 'system', content: '你是一位文案润色专家。润色以下文案：去掉口水词、优化表达、提升质感，保持原意不变。直接返回润色后的文案。' },
-            { role: 'user', content: `润色风格：${style || '简洁流畅'}\n\n原文：${content}` }
-          ],
-          temperature: 0.5,
-          max_tokens: 2000
-        },
-        {
-          headers: { 'Authorization': `Bearer ${config.mimo.apiKey}`, 'Content-Type': 'application/json' },
-          timeout: 60000
-        }
-      )
-      return res.json({ result: response.data.choices[0].message.content })
-    } catch (err) {
-      return next(err)
+  try {
+    const LLMConfig = require('../model/LLMConfig')
+    const llm = await LLMConfig.findOne({ isActive: true })
+    if (llm) {
+      const resp = await axios.post(llm.apiUrl, {
+        model: llm.model,
+        messages: [
+          { role: 'system', content: `你是一位文案润色专家。润色以下文案：去掉口水词、优化表达、提升质感，保持原意不变。直接返回润色后的文案，不要任何解释。风格：${style || '简洁流畅'}` },
+          { role: 'user', content }
+        ],
+        temperature: 0.5, max_tokens: 2000
+      }, {
+        headers: { Authorization: `Bearer ${llm.apiKey}`, 'Content-Type': 'application/json' },
+        timeout: 60000
+      })
+      return res.json({ result: resp.data?.choices?.[0]?.message?.content || '' })
     }
+  } catch (err) {
+    console.error('润色API失败:', err.message)
   }
 
-  // 本地模拟润色
-  let polished = content
-    .replace(/[嗯|啊|呃|这个|那个|就是说]/g, '')
-    .replace(/然后然后/g, '然后')
-    .replace(/非常非常/g, '非常')
-    .replace(/\s{2,}/g, '\n')
-  res.json({ result: polished })
+  // 兜底：本地去除口水词
+  res.json({ result: content.replace(/嗯|啊|呃|就是说|这个那个/g, '').replace(/然后然后/g, '然后').replace(/非常非常/g, '非常') })
 }
 
 // 分镜表生成
