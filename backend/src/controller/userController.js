@@ -78,6 +78,21 @@ exports.removeFavorite = async (req, res) => {
   } catch { res.status(500).json({ message: '操作失败' }) }
 }
 
+// 获取用户收藏列表
+exports.getFavorites = async (req, res) => {
+  try {
+    const auth = req.headers.authorization; if (!auth) return res.status(401).json({ message: '请先登录' })
+    const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+    const userId = decoded.split(':')[0]
+    const user = await User.findById(userId).populate('favorites', 'agent keywords detail createdAt').lean()
+    if (!user) return res.json({ list: [] })
+    const list = (user.favorites || []).map(f => ({
+      id: f._id, agent: f.agent, keywords: f.keywords, detail: f.detail, time: f.createdAt
+    }))
+    res.json({ list })
+  } catch { res.json({ list: [] }) }
+}
+
 // 获取当前用户的个人统计
 exports.getMyStats = async (req, res) => {
   try {

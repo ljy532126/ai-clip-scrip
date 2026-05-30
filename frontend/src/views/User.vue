@@ -47,7 +47,7 @@
           <van-switch :model-value="themeStore.isDark" @update:model-value="themeStore.toggle()" size="24" @click.stop />
         </template>
       </van-cell>
-      <van-cell title="我的收藏" is-link to="/record">
+      <van-cell title="我的收藏" is-link to="/record?tab=favorites">
         <template #icon><StarIcon size="22" fill="#6b6255" style="margin-right:14px;"/></template>
       </van-cell>
       <van-cell v-if="userStore.isAdmin" title="后台管理" is-link to="/admin">

@@ -17,6 +17,7 @@ COPY backend/package*.json ./
 RUN npm ci --production --silent
 COPY backend/ ./
 COPY --from=frontend-builder /app/frontend/dist ./public
+COPY .env ./.env
 RUN mkdir -p output
 
 EXPOSE 3013

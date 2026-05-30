@@ -1,7 +1,9 @@
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') })
+const fs = require('fs')
+const envPaths = [path.resolve(__dirname, '../.env'), path.resolve(__dirname, '../../.env')]
+for (const p of envPaths) { if (fs.existsSync(p)) { require('dotenv').config({ path: p }); break } }
 
 const config = require('./config')
 const { connectDB } = require('./model/db')
@@ -54,10 +56,10 @@ const start = async () => {
   }
 
   // SPA fallback (after API routes)
-  const publicDir = path.join(__dirname, '../../public')
-  if (require('fs').existsSync(publicDir)) {
+  const publicDir = [path.join(__dirname, '../public'), path.join(__dirname, '../../public')].find(p => fs.existsSync(p)) || ''
+  if (publicDir) {
     app.use(express.static(publicDir))
-    app.get('*', (req, res) => { res.sendFile(path.join(publicDir, 'index.html')) })
+    app.use((req, res) => { res.sendFile(path.join(publicDir, 'index.html')) })
   }
 
   app.listen(config.port, () => {

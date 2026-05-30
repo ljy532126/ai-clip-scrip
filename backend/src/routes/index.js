@@ -22,6 +22,7 @@ router.post('/user/register', userController.register)
 router.get('/user/info', userController.getInfo)
 router.post('/user/favorite', userController.addFavorite)
 router.post('/user/unfavorite', userController.removeFavorite)
+router.get('/user/favorites', userController.getFavorites)
 router.get('/user/mystats', userController.getMyStats)
 
 // 工具箱

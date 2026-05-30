@@ -48,7 +48,8 @@ export const userAPI = {
   getUserInfo: () => http.get('/user/info'),
   getMyStats: () => http.get('/user/mystats'),
   addFavorite: (recordId) => http.post('/user/favorite', { recordId }),
-  removeFavorite: (recordId) => http.post('/user/unfavorite', { recordId })
+  removeFavorite: (recordId) => http.post('/user/unfavorite', { recordId }),
+  getFavorites: () => http.get('/user/favorites')
 }
 
 // 工具箱API

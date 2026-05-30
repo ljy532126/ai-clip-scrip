@@ -73,7 +73,7 @@ const goGenerate = (agentKey) => { generateStore.setAgent(agentKey); router.push
 .stat-num { font-size: 28px; font-weight: 700; color: var(--accent); }
 .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .stat-split { color: var(--border-color); font-size: 20px; }
-.section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); padding: 0 18px 12px; }
+.section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); padding: 0 18px 12px; text-align: center; }
 .agent-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 14px; }
 @media (min-width: 768px) { .agent-grid { grid-template-columns: repeat(3, 1fr); max-width: 860px; margin: 0 auto; gap: 14px; } }
 .agent-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px 16px; cursor: pointer; transition: all 0.2s; text-align: center; }

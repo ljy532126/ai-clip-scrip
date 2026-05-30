@@ -1,49 +1,8 @@
-# ============================================
-# Docker Compose — 生产环境部署
-# ============================================
-
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: clip-script-app
-    restart: unless-stopped
-    ports:
-      - "3013:3013"
-    env_file:
-      - .env
+  clip-script:
+    build: .
+    container_name: clip-script
+    network_mode: host
     environment:
-      - PORT=3013
-      - MONGO_URI=mongodb://mongo:27017/clip-script-platform
-    depends_on:
-      mongo:
-        condition: service_healthy
-    volumes:
-      - ./backend/output:/app/output
-    networks:
-      - clip-network
-
-  mongo:
-    image: mongo:7
-    container_name: clip-script-mongo
+      - MONGO_URI=mongodb://127.0.0.1:27017/clip-script-platform
     restart: unless-stopped
-    ports:
-      - "27018:27017"
-    volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - clip-network
-
-volumes:
-  mongo-data:
-    driver: local
-
-networks:
-  clip-network:
-    driver: bridge
