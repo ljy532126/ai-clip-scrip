@@ -145,7 +145,7 @@ exports.getStats = async (req, res) => {
         userMap[u.userId || u._id.toString()] = u
         userMap[u._id.toString()] = u
       }
-      topUsers = userRanking.map((r, i) => ({
+      topUsers = userRanking.filter(r => r._id).map((r, i) => ({
         rank: i + 1,
         userId: userMap[r._id.toString()]?.userId || '未知',
         nickname: userMap[r._id.toString()]?.nickname || userMap[r._id.toString()]?.username || '匿名',
