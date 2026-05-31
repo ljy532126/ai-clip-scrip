@@ -41,7 +41,7 @@ jobs:
       - name: Build Frontend
         working-directory: frontend
         run: |
-          echo "VITE_API_BASE=http://10.168.1.101:3013/api" > .env.production
+          echo "VITE_API_BASE=https://ai-clip-scrip.nova520.top/api" > .env.production
           npm run build
 
       - name: Sync Capacitor
