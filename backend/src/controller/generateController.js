@@ -12,6 +12,24 @@ exports.generate = async (req, res, next) => {
       return res.status(400).json({ message: '请选择Agent并输入关键词' })
     }
 
+    // 解析用户
+    let userId = null; let role = 'guest'
+    try {
+      const auth = req.headers.authorization
+      if (auth) {
+        const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+        const parts = decoded.split(':')
+        userId = parts[0]; role = parts[2] || 'guest'
+      }
+    } catch {}
+
+    // 游客限制3条
+    if (role === 'guest') {
+      const guestIp = req.ip || req.connection.remoteAddress
+      const guestCount = await Record.countDocuments({ userId: 'guest', guestIp })
+      if (guestCount >= 3) return res.status(403).json({ message: '免费额度已用完（3条），请登录后继续使用' })
+    }
+
     const result = await agentService.generate(agent, {
       keywords, duration: duration || 60, detail: detail || 'standard',
       styles: styles || [style || 'professional'], wordCount: wordCount || 500, creativeMode: !!creativeMode
@@ -19,16 +37,7 @@ exports.generate = async (req, res, next) => {
 
     const documents = fileGenerate.parseAndGenerate(agent, result.content)
 
-    // 从 token 解析用户ID
-    let userId = null
-    try {
-      const auth = req.headers.authorization
-      if (auth) {
-        const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
-        userId = decoded.split(':')[0]
-      }
-    } catch {}
-
+    const guestIp = (role === 'guest') ? (req.ip || req.connection.remoteAddress) : undefined
     let recordId = 'mem-' + Date.now()
     try {
       const doc = await Record.create({
@@ -38,7 +47,7 @@ exports.generate = async (req, res, next) => {
         documents, tokensUsed: result.tokensUsed || 0,
         promptTokens: result.promptTokens || 0,
         completionTokens: result.completionTokens || 0,
-        userId, createdAt: new Date()
+        userId: userId || 'guest', guestIp, createdAt: new Date()
       })
       recordId = doc._id.toString()
     } catch (dbErr) {
@@ -46,12 +55,11 @@ exports.generate = async (req, res, next) => {
     }
 
     res.json({
-      id: recordId,
+      id: recordId, guestRemaining: role === 'guest' ? (3 - await Record.countDocuments({ userId: 'guest', guestIp })) : null,
       script: documents.script,
       operation: documents.operation,
       readme: documents.readme,
       seo: documents.seo,
-      // 单条统计
       scriptChars: documents.script.replace(/\s/g, '').length,
       operationChars: documents.operation.replace(/\s/g, '').length,
       readmeChars: documents.readme.replace(/\s/g, '').length,
@@ -64,10 +72,24 @@ exports.generate = async (req, res, next) => {
   }
 }
 
+// 解析用户身份（游客=null，用户=userId，管理员=userId且role=admin）
+function parseUser(req) {
+  try {
+    const auth = req.headers.authorization
+    if (!auth) return null
+    const decoded = Buffer.from(auth.replace('Bearer ', ''), 'base64').toString()
+    const parts = decoded.split(':')
+    return { mongoId: parts[0], userId: parts[1], role: parts[2] }
+  } catch { return null }
+}
+
 // 获取生成历史
 exports.history = async (req, res) => {
   try {
-    const docs = await Record.find({}, 'agent keywords detail createdAt')
+    const user = parseUser(req)
+    if (!user) return res.json({ list: [] })
+    const filter = user.role === 'admin' ? {} : { userId: user.mongoId }
+    const docs = await Record.find(filter, 'agent keywords detail createdAt userId')
       .sort({ createdAt: -1 }).limit(50).lean()
     const list = docs.map(d => ({
       id: d._id, agent: d.agent, keywords: d.keywords,

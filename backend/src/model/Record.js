@@ -17,6 +17,7 @@ const recordSchema = new mongoose.Schema({
   promptTokens: { type: Number, default: 0 },
   completionTokens: { type: Number, default: 0 },
   userId: { type: String, default: '' },
+  guestIp: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 })
 
